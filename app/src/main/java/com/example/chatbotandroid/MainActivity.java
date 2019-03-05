@@ -12,11 +12,16 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.chatbotandroid.Adapter.ChatAdapter;
+import com.example.chatbotandroid.Model.Chat;
 
 import org.json.JSONObject;
 
@@ -27,6 +32,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.List;
 
 import ai.api.AIListener;
 import ai.api.android.AIConfiguration;
@@ -41,6 +47,9 @@ public class MainActivity extends AppCompatActivity implements AIListener {
     private static final int REQUEST_CODE_SPEECH_INPUT = 505 ;
     Button listen;
     TextView textView,userText,responseText;
+    private ChatAdapter mChatAdapter;
+    private  List<Chat> mChat = new ArrayList<>();
+    RecyclerView recyclerView;
     private static final String TAG = "MainActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +61,13 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         responseText = findViewById(R.id.responseText);
 
         textView = findViewById(R.id.textView);
+        recyclerView = findViewById(R.id.recycler_view);
+        mChatAdapter = new ChatAdapter(this,mChat);
+        recyclerView.setHasFixedSize(true);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
+        linearLayoutManager.setStackFromEnd(true);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setAdapter(mChatAdapter);
 
         int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
         if(permission != PackageManager.PERMISSION_GRANTED){
@@ -72,6 +88,8 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                 aiService.startListening();
             }
         });
+
+
     }
 
     private void promptSpeechInput() {
@@ -98,12 +116,25 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     String userQuery = result.get(0);
                     userText.setText(userQuery);
+                    sendMessage("11","00",userQuery);
                     RetrieveFeedTask task = new RetrieveFeedTask();
                     task.execute(userQuery);
+
                 }
                 break;
             }
         }
+    }
+
+    private void sendMessage(String s, String s1, String userQuery)
+    {
+        Chat newChat = new Chat();
+        newChat.setSender(s);
+        newChat.setReciever(s1);
+        newChat.setMessage(userQuery);
+        mChat.add(newChat);
+        mChatAdapter.notifyDataSetChanged();
+
     }
 
 
@@ -226,8 +257,26 @@ public class MainActivity extends AppCompatActivity implements AIListener {
             super.onPostExecute(s);
             Log.d(TAG, "onPostExecute: "+ s);
             responseText.setText(s);
+            Chat newChat = new Chat();
+            newChat.setSender("00");
+            newChat.setReciever("11");
+            newChat.setMessage(s);
+            mChat.add(newChat);
+        //    readMessages("00","11",s);
+            mChatAdapter.notifyDataSetChanged();
         }
     }
+
+    private void readMessages(String sender,String receiver,String message){
+
+             Chat myChat = new Chat(sender,receiver,message);
+             mChat.add(myChat);
+             mChatAdapter.notifyDataSetChanged();
+
+
+
+    }
+
     @Override
     public void onResult(AIResponse result) {
         Log.d(TAG, "onResult: "+ result.toString());
@@ -262,4 +311,5 @@ public class MainActivity extends AppCompatActivity implements AIListener {
     public void onListeningFinished() {
 
     }
+
 }
