@@ -17,7 +17,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.chatbotandroid.Adapter.ChatAdapter;
@@ -45,8 +45,8 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
     private static final int RECORD_REQUEST_CODE = 101;
     private static final int REQUEST_CODE_SPEECH_INPUT = 505 ;
-    Button listen;
-    TextView textView,userText,responseText;
+    Button listen, send;
+    EditText textInput;
     private ChatAdapter mChatAdapter;
     private  List<Chat> mChat = new ArrayList<>();
     RecyclerView recyclerView;
@@ -57,10 +57,9 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         setContentView(R.layout.activity_main);
 
         listen = findViewById(R.id.listen);
-        userText = findViewById(R.id.userText);
-        responseText = findViewById(R.id.responseText);
+        send = findViewById(R.id.send);
+        textInput = findViewById(R.id.textInput);
 
-        textView = findViewById(R.id.textView);
         recyclerView = findViewById(R.id.recycler_view);
         mChatAdapter = new ChatAdapter(this,mChat);
         recyclerView.setHasFixedSize(true);
@@ -68,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         linearLayoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(mChatAdapter);
+
 
         int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
         if(permission != PackageManager.PERMISSION_GRANTED){
@@ -86,6 +86,17 @@ public class MainActivity extends AppCompatActivity implements AIListener {
             public void onClick(View v) {
                 promptSpeechInput();
                 aiService.startListening();
+            }
+        });
+        send.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String input = textInput.getText().toString();
+                sendMessage("11","00",input);
+                RetrieveFeedTask task = new RetrieveFeedTask();
+                task.execute(input);
+                textInput.setText("");
+
             }
         });
 
@@ -115,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                     ArrayList<String> result = data
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     String userQuery = result.get(0);
-                    userText.setText(userQuery);
+                  //  userText.setText(userQuery);
                     sendMessage("11","00",userQuery);
                     RetrieveFeedTask task = new RetrieveFeedTask();
                     task.execute(userQuery);
@@ -133,7 +144,9 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         newChat.setReciever(s1);
         newChat.setMessage(userQuery);
         mChat.add(newChat);
+
         mChatAdapter.notifyDataSetChanged();
+        recyclerView.smoothScrollToPosition((mChat.size()));
 
     }
 
@@ -256,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             Log.d(TAG, "onPostExecute: "+ s);
-            responseText.setText(s);
+         //   responseText.setText(s);
             Chat newChat = new Chat();
             newChat.setSender("00");
             newChat.setReciever("11");
@@ -264,6 +277,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
             mChat.add(newChat);
         //    readMessages("00","11",s);
             mChatAdapter.notifyDataSetChanged();
+            recyclerView.smoothScrollToPosition((mChat.size()));
         }
     }
 
@@ -282,7 +296,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         Log.d(TAG, "onResult: "+ result.toString());
         Result result1 = result.getResult();
 
-        textView.setText("Query "+ result1.getResolvedQuery()+" Action: "+ result1.getAction());
+   //     textView.setText("Query "+ result1.getResolvedQuery()+" Action: "+ result1.getAction());
 
 
     }
