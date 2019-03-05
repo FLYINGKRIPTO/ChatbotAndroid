@@ -10,6 +10,8 @@
         android:maxWidth="300dp"
         android:padding="8dp"
         android:text="Hello"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-condensed-medium"
         android:textSize="18sp"
         android:layout_height="wrap_content"
         android:background="@drawable/background_left"

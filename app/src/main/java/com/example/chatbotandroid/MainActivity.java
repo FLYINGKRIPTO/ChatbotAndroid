@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -33,6 +34,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import ai.api.AIListener;
 import ai.api.android.AIConfiguration;
@@ -47,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
     private static final int REQUEST_CODE_SPEECH_INPUT = 505 ;
     Button listen, send;
     EditText textInput;
+    TextToSpeech t1;
     private ChatAdapter mChatAdapter;
     private  List<Chat> mChat = new ArrayList<>();
     RecyclerView recyclerView;
@@ -68,7 +71,15 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(mChatAdapter);
 
+        t1 = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if(status != TextToSpeech.ERROR){
+                    t1.setLanguage(Locale.UK);
 
+                }
+            }
+        });
         int permission = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
         if(permission != PackageManager.PERMISSION_GRANTED){
             Log.d(TAG, "onCreate: "+ "permission to record denied ");
@@ -268,6 +279,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
+            t1.speak(s,TextToSpeech.QUEUE_FLUSH,null);
             Log.d(TAG, "onPostExecute: "+ s);
          //   responseText.setText(s);
             Chat newChat = new Chat();
